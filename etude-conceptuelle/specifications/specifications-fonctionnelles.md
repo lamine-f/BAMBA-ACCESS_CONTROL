@@ -1295,7 +1295,7 @@ Affichage sur écran dédié au lecteur :
 
 ---
 
-*Document créé le : [Date]*
+*Document créé le : 14/11/2025*
 *Version : 1.0*
 *Auteur : Système de documentation automatique*
 *Statut : Validé pour implémentation*
