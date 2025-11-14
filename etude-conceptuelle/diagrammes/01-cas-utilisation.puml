@@ -1,0 +1,136 @@
+@startuml Diagramme_Cas_Utilisation
+title Système de Contrôle d'Accès pour Étudiants\nDiagramme de Cas d'Utilisation
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Étudiant" as etudiant
+actor "Visiteur" as visiteur
+actor "Administrateur" as admin
+actor "Système de Badge" as systeme <<System>>
+actor "Base de Données" as bd <<System>>
+
+rectangle "Système de Contrôle d'Accès" {
+
+  package "Gestion des Accès" {
+    usecase "Présenter le badge" as UC1
+    usecase "Vérifier le badge" as UC2
+    usecase "Vérifier statut paiement" as UC3
+    usecase "Autoriser l'accès" as UC4
+    usecase "Refuser l'accès" as UC5
+    usecase "Enregistrer le passage" as UC6
+  }
+
+  package "Gestion des Étudiants" {
+    usecase "Créer un étudiant" as UC7
+    usecase "Modifier un étudiant" as UC8
+    usecase "Supprimer un étudiant" as UC9
+    usecase "Consulter un étudiant" as UC10
+    usecase "Attribuer un badge" as UC11
+  }
+
+  package "Gestion des Paiements" {
+    usecase "Enregistrer un paiement" as UC12
+    usecase "Vérifier les paiements" as UC13
+    usecase "Modifier le statut de paiement" as UC14
+    usecase "Consulter les impayés" as UC15
+  }
+
+  package "Gestion des Badges" {
+    usecase "Activer un badge" as UC16
+    usecase "Désactiver un badge" as UC17
+    usecase "Bloquer un badge" as UC18
+    usecase "Gérer badge perdu/volé" as UC19
+    usecase "Créer badge visiteur" as UC20
+  }
+
+  package "Gestion des Trimestres" {
+    usecase "Créer un trimestre" as UC21
+    usecase "Clôturer un trimestre" as UC22
+    usecase "Configurer période" as UC23
+  }
+
+  package "Consultation et Rapports" {
+    usecase "Consulter historique passages" as UC24
+    usecase "Générer rapport présence" as UC25
+    usecase "Générer rapport paiements" as UC26
+    usecase "Générer rapport visiteurs" as UC27
+    usecase "Consulter statistiques" as UC28
+    usecase "Filtrer les données" as UC29
+  }
+}
+
+' Relations Étudiant
+etudiant --> UC1
+
+' Relations Visiteur
+visiteur --> UC1
+
+' Relations Administrateur
+admin --> UC7
+admin --> UC8
+admin --> UC9
+admin --> UC10
+admin --> UC11
+admin --> UC12
+admin --> UC13
+admin --> UC14
+admin --> UC15
+admin --> UC16
+admin --> UC17
+admin --> UC18
+admin --> UC19
+admin --> UC20
+admin --> UC21
+admin --> UC22
+admin --> UC23
+admin --> UC24
+admin --> UC25
+admin --> UC26
+admin --> UC27
+admin --> UC28
+
+' Relations Système
+systeme --> UC2
+bd --> UC6
+
+' Relations Include (dépendances obligatoires)
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC4 ..> UC6 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC7 ..> UC11 : <<include>>
+UC11 ..> UC16 : <<include>>
+UC19 ..> UC18 : <<include>>
+UC19 ..> UC11 : <<include>>
+UC25 ..> UC29 : <<include>>
+UC26 ..> UC29 : <<include>>
+UC27 ..> UC29 : <<include>>
+
+' Relations Extend (cas alternatifs)
+UC2 ..> UC4 : <<extend>>\n[paiement OK]
+UC2 ..> UC5 : <<extend>>\n[paiement KO ou badge invalide]
+UC17 ..> UC18 : <<extend>>\n[badge perdu/volé]
+UC22 ..> UC21 : <<extend>>\n[nouveau trimestre]
+
+' Notes explicatives
+note right of UC2
+  Vérifie l'existence du badge,
+  son statut et le paiement
+  du trimestre en cours
+end note
+
+note right of UC6
+  Enregistre tous les passages
+  (autorisés et refusés)
+  avec date, heure et motif
+end note
+
+note bottom of UC19
+  En cas de perte/vol :
+  1. Bloquer ancien badge
+  2. Créer nouveau badge
+  3. Transférer les droits
+end note
+
+@enduml

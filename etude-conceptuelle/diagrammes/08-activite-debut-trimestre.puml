@@ -1,0 +1,263 @@
+@startuml Activite_Debut_Trimestre
+title Système de Contrôle d'Accès\nDiagramme d'Activité - Processus de Gestion de Début de Trimestre
+
+|Administrateur|
+start
+:Accéder au module\n"Gestion des trimestres";
+
+:Consulter l'état des trimestres;
+
+|Système|
+:Afficher liste des trimestres\nde l'année académique;
+note right
+  Pour chaque trimestre:
+  - Numéro (1, 2, 3)
+  - Période (dates)
+  - Statut (EN_PREPARATION, EN_COURS, CLOTURE)
+  - Taux de paiement
+end note
+
+|Administrateur|
+if (Trimestre en cours à clôturer ?) then (oui)
+
+  |Système|
+  :Identifier le trimestre actif;
+
+  |Administrateur|
+  :Cliquer sur "Clôturer le trimestre X";
+
+  |Système|
+  :Vérifier la date de fin du trimestre;
+
+  if (Date >= date fin prévue ?) then (oui)
+    :Confirmer clôture;
+
+    |Administrateur|
+    if (Confirmer l'action ?) then (oui)
+
+      |Système|
+      fork
+        :Générer rapport final du trimestre;
+        note right
+          - Taux de paiement final
+          - Statistiques de présence
+          - Impayés restants
+        end note
+      fork again
+        :Archiver les données du trimestre;
+      fork again
+        :Modifier statut trimestre = CLOTURE;
+      end fork
+
+      :Enregistrer date de clôture;
+
+      #LightGreen:Trimestre clôturé avec succès;
+
+    else (non)
+      :Annuler la clôture;
+      stop
+    endif
+
+  else (non - trop tôt)
+    #Orange:Afficher avertissement;
+    note right
+      "Le trimestre n'est pas encore terminé.
+      Voulez-vous quand même le clôturer ?"
+    end note
+
+    |Administrateur|
+    if (Forcer la clôture ?) then (oui)
+      ' Continue
+    else (non)
+      stop
+    endif
+  endif
+
+else (non)
+  ' Pas de clôture nécessaire
+endif
+
+|Administrateur|
+:Cliquer sur "Créer nouveau trimestre";
+
+|Système|
+:Afficher formulaire de création;
+
+|Administrateur|
+:Saisir les informations du trimestre;
+note right
+  Informations:
+  - Numéro du trimestre (1, 2, ou 3)
+  - Année académique
+  - Date de début
+  - Date de fin
+  - Montant du trimestre
+end note
+
+|Système|
+:Valider les données;
+
+if (Données valides ?) then (oui)
+
+  :Vérifier qu'aucun trimestre\navec même numéro n'est EN_COURS;
+
+  if (Conflit détecté ?) then (oui)
+    #Pink:Erreur - Un trimestre est déjà actif;
+    stop
+  else (non)
+
+    :Créer l'enregistrement trimestre;
+    :Statut = EN_PREPARATION;
+    :Enregistrer dans la BD;
+
+    |Administrateur|
+    :Consulter le trimestre créé;
+
+    if (Activer immédiatement ?) then (oui)
+
+      |Système|
+      :Modifier statut = EN_COURS;
+      :Désactiver tous les autres trimestres;
+
+      == Mise à jour massive des droits d'accès ==
+
+      :Récupérer tous les étudiants actifs;
+
+      partition "Traitement par lot" {
+        :Pour chaque étudiant;
+
+        :Vérifier si paiement existe\npour le nouveau trimestre;
+
+        if (Paiement effectué ?) then (oui)
+          :Badge reste ACTIF;
+          note right
+            L'étudiant a payé à l'avance,
+            son accès continue
+          end note
+        else (non)
+          :Désactiver le badge;
+          :Statut badge = INACTIF;
+          note right
+            L'accès sera rétabli
+            lors du paiement
+          end note
+        endif
+
+        :Passer à l'étudiant suivant;
+      }
+
+      :Calculer statistiques initiales;
+      note right
+        - Nombre d'étudiants avec accès actif
+        - Nombre de badges désactivés
+        - Impayés potentiels
+      end note
+
+      fork
+        |Système|
+        :Enregistrer dans l'historique;
+        note right
+          Action: ACTIVATION_TRIMESTRE
+          Trimestre: X
+          Badges désactivés: N
+          Date/Heure
+        end note
+      fork again
+        |Système|
+        if (Notifications activées ?) then (oui)
+          :Générer liste des étudiants impayés;
+
+          partition "Envoi notifications" {
+            :Pour chaque étudiant impayé;
+
+            :Envoyer notification parents;
+            note right
+              Contenu:
+              - Nouveau trimestre démarré
+              - Montant à payer
+              - Date limite
+              - Conséquences (accès bloqué)
+            end note
+          }
+        endif
+      end fork
+
+      |Administrateur|
+      #LightGreen:Nouveau trimestre activé;
+
+      :Consulter le tableau de bord;
+      note right
+        Affichage:
+        - Trimestre en cours
+        - Taux de paiement initial
+        - Nombre d'accès actifs
+        - Nombre d'impayés
+      end note
+
+    else (non - activation ultérieure)
+      :Trimestre créé en attente;
+      note right
+        Le trimestre peut être
+        activé manuellement
+        plus tard
+      end note
+    endif
+
+    == Communication et diffusion ==
+
+    |Administrateur|
+    if (Publier annonce ?) then (oui)
+      fork
+        :Afficher annonce sur dashboard;
+      fork again
+        :Envoyer email collectif;
+        note right
+          Destinataires:
+          - Tous les parents
+          - Enseignants
+          - Personnel administratif
+        end note
+      fork again
+        :Générer document imprimable;
+        note right
+          Contenu:
+          - Dates du trimestre
+          - Montant
+          - Modalités de paiement
+        end note
+      end fork
+    endif
+
+    == Préparation des outils ==
+
+    |Système|
+    fork
+      :Initialiser compteurs KPI\npour le nouveau trimestre;
+    fork again
+      :Créer template de rapport vierge;
+    fork again
+      :Réinitialiser statistiques\nde présence;
+    end fork
+
+    #LightGreen:**Trimestre configuré et opérationnel**;
+
+    stop
+
+  endif
+
+else (non - données invalides)
+  #Pink:Afficher erreurs de validation;
+  note right
+    Exemples:
+    - Date début >= date fin
+    - Montant <= 0
+    - Numéro trimestre invalide
+    - Chevauchement de dates
+  end note
+
+  |Administrateur|
+  :Corriger les informations;
+  detach
+endif
+
+@enduml

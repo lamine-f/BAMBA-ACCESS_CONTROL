@@ -1,0 +1,244 @@
+@startuml Sequence_Generation_Rapport
+title Système de Contrôle d'Accès\nDiagramme de Séquence - Génération de Rapport de Présence
+
+actor "Administrateur" as admin
+participant "Interface\nAdmin" as ui
+participant "Service\nRapport" as serviceRpt
+database "Base de\nDonnées" as bd
+participant "Moteur\nCalcul" as calcul
+participant "Générateur\nDocument" as doc
+
+== Sélection des paramètres du rapport ==
+
+admin -> ui : Accéder à "Générer rapport de présence"
+activate ui
+
+ui -> bd : obtenirListeClasses()
+activate bd
+bd --> ui : Liste des classes
+deactivate bd
+
+ui --> admin : Affiche formulaire de configuration
+
+admin -> ui : Définit les critères :
+note right
+  - Type : Présence/Absence
+  - Période : date début, date fin
+  - Portée : Toutes classes / Classe spécifique
+  - Format : PDF, Excel, CSV
+  - Niveau détail : Synthèse / Détaillé
+end note
+
+ui -> ui : Valider les critères
+alt Dates invalides (début > fin, future, etc.)
+    ui --> admin : Message d'erreur
+    admin -> ui : Corrige les dates
+end
+
+== Lancement de la génération ==
+
+admin -> ui : Clique "Générer le rapport"
+ui -> serviceRpt : genererRapportPresence(parametres)
+activate serviceRpt
+
+serviceRpt -> serviceRpt : Créer objet Rapport
+serviceRpt -> serviceRpt : Valider la période
+
+== Collecte des données ==
+
+alt Rapport pour une classe spécifique
+    serviceRpt -> bd : obtenirEtudiantsClasse(idClasse)
+    activate bd
+    bd --> serviceRpt : Liste étudiants de la classe
+    deactivate bd
+
+else Rapport pour toutes les classes
+    serviceRpt -> bd : obtenirTousEtudiantsActifs()
+    activate bd
+    bd --> serviceRpt : Liste de tous les étudiants actifs
+    deactivate bd
+end
+
+serviceRpt -> bd : obtenirPassages(dateDebut, dateFin, listeEtudiants)
+activate bd
+note right
+  SELECT * FROM Passage
+  WHERE dateHeurePassage BETWEEN debut AND fin
+  AND idBadge IN (badges des étudiants)
+  AND resultat = 'AUTORISE'
+end note
+bd --> serviceRpt : Historique des passages
+deactivate bd
+
+serviceRpt -> bd : obtenirJoursOuvrables(dateDebut, dateFin)
+activate bd
+bd --> serviceRpt : Liste des jours ouvrables
+deactivate bd
+
+== Traitement et calculs ==
+
+serviceRpt -> calcul : calculerStatistiques(passages, etudiants, joursOuvrables)
+activate calcul
+
+loop Pour chaque étudiant
+    calcul -> calcul : Compter jours de présence
+    note right
+      Un passage par jour = 1 présence
+      Pas de passage = absence
+    end note
+
+    calcul -> calcul : Calculer nombre absences
+    note right
+      absences = joursOuvrables - présences
+    end note
+
+    calcul -> calcul : Calculer taux de présence
+    note right
+      tauxPresence = (présences / joursOuvrables) × 100
+    end note
+
+    calcul -> calcul : Identifier retards (si heure > seuil)
+
+    calcul -> calcul : Détecter absences consécutives
+end
+
+calcul -> calcul : Calculer statistiques globales
+note right
+  - Taux de présence moyen par classe
+  - Nombre total de présences
+  - Nombre total d'absences
+  - Top 10 étudiants les plus assidus
+  - Top 10 étudiants avec plus d'absences
+  - Heure moyenne d'arrivée
+end note
+
+calcul --> serviceRpt : Données calculées et agrégées
+deactivate calcul
+
+== Formatage des données ==
+
+alt Niveau détail = DETAILLE
+    serviceRpt -> serviceRpt : Préparer tableau détaillé
+    note right
+      Pour chaque étudiant:
+      - Nom, Prénom, Classe
+      - Jours de présence (liste)
+      - Jours d'absence (liste)
+      - Nombre de retards
+      - Taux de présence
+    end note
+
+else Niveau détail = SYNTHESE
+    serviceRpt -> serviceRpt : Préparer tableau synthèse
+    note right
+      - Statistiques par classe
+      - Moyennes générales
+      - Graphiques de tendance
+    end note
+end
+
+== Génération du document ==
+
+serviceRpt -> doc : genererDocument(donnees, format, template)
+activate doc
+
+alt Format = PDF
+    doc -> doc : Créer document PDF
+    doc -> doc : Ajouter en-tête (logo, titre, période)
+    doc -> doc : Générer tableaux de données
+    doc -> doc : Ajouter graphiques (si synthèse)
+    note right
+      Graphiques possibles:
+      - Évolution présence/jour
+      - Répartition par classe
+      - Courbe de tendance
+    end note
+    doc -> doc : Ajouter pied de page (date génération, admin)
+
+else Format = EXCEL
+    doc -> doc : Créer classeur Excel
+    doc -> doc : Créer feuille "Synthèse"
+    doc -> doc : Créer feuille "Détails"
+    doc -> doc : Créer feuille "Graphiques"
+    doc -> doc : Appliquer formatage (couleurs, filtres)
+
+else Format = CSV
+    doc -> doc : Générer fichier CSV
+    doc -> doc : Structurer données tabulaires
+    doc -> doc : Encoder en UTF-8
+end
+
+doc --> serviceRpt : Document généré
+deactivate doc
+
+== Sauvegarde et historique ==
+
+serviceRpt -> bd : sauvegarderRapport(rapport, fichier)
+activate bd
+bd --> serviceRpt : Rapport sauvegardé (idRapport)
+deactivate bd
+
+serviceRpt -> bd : enregistrerHistorique(admin, "GENERATION_RAPPORT", details)
+activate bd
+note right
+  Détails:
+  - Type de rapport
+  - Période
+  - Portée (classe/global)
+  - Format
+end note
+bd --> serviceRpt : Historique enregistré
+deactivate bd
+
+serviceRpt --> ui : Rapport généré avec succès (fichier + métadonnées)
+deactivate serviceRpt
+
+== Visualisation et export ==
+
+ui --> admin : Affiche aperçu + bouton téléchargement
+
+admin -> ui : Visualise le rapport
+ui --> admin : Affiche contenu dans visualiseur
+
+alt Téléchargement
+    admin -> ui : Clique "Télécharger"
+    ui --> admin : Télécharge le fichier
+end
+
+alt Impression directe
+    admin -> ui : Clique "Imprimer"
+    ui -> ui : Ouvre dialogue impression
+    ui --> admin : Imprime le rapport
+end
+
+alt Partage par email
+    admin -> ui : Clique "Envoyer par email"
+    ui -> ui : Ouvre formulaire email
+    admin -> ui : Saisit destinataire
+    ui -> ui : Envoie email avec pièce jointe
+    ui --> admin : Confirmation envoi
+end
+
+deactivate ui
+
+== Scénario Alternatif : Pas de données ==
+
+alt Aucun passage dans la période
+    serviceRpt -> ui : Aucune donnée trouvée
+    ui --> admin : Message "Aucune présence enregistrée pour cette période"
+end
+
+== Scénario Alternatif : Génération programmée ==
+
+opt Rapport automatique (hebdomadaire/mensuel)
+    participant "Scheduler" as scheduler
+    scheduler -> serviceRpt : genererRapportAutomatique()
+    note right
+      Exécution planifiée:
+      - Tous les lundis (rapport hebdo)
+      - 1er du mois (rapport mensuel)
+      Envoi automatique par email
+    end note
+end
+
+@enduml

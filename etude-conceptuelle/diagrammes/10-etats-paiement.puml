@@ -1,0 +1,196 @@
+@startuml Etats_Paiement
+title Système de Contrôle d'Accès\nDiagramme d'États - Statut de Paiement Trimestriel
+
+[*] --> Impaye : Début du trimestre
+
+state "Impayé" as Impaye {
+  Impaye : Aucun paiement enregistré
+  Impaye : Accès bloqué pour l'étudiant
+  Impaye : Badge désactivé
+  Impaye : --
+  Impaye : Montant dû = Montant total
+}
+
+state "Partiel" as Partiel {
+  Partiel : Paiement incomplet effectué
+  Partiel : Accès encore bloqué
+  Partiel : --
+  Partiel : Montant restant > 0
+  Partiel : Possibilité de compléter
+}
+
+state "Payé" as Paye {
+  Paye : Paiement complet effectué
+  Paye : Accès autorisé
+  Paye : Badge activé
+  Paye : --
+  Paye : Montant dû = 0
+  Paye : Reçu généré
+}
+
+state "Remboursé" as Rembourse {
+  Rembourse : Paiement annulé et remboursé
+  Rembourse : Cas exceptionnel
+  Rembourse : --
+  Rembourse : Motif documenté
+  Rembourse : Retour à impayé possible
+}
+
+state "En Attente" as EnAttente {
+  EnAttente : Paiement en cours de validation
+  EnAttente : Transaction non finalisée
+  EnAttente : --
+  EnAttente : Virement/chèque en traitement
+  EnAttente : Accès temporairement bloqué
+}
+
+' Transitions principales
+Impaye --> EnAttente : Enregistrement d'un paiement\n[Mode = Virement/Chèque]
+Impaye --> Partiel : Paiement partiel enregistré\n[Montant < Montant total]
+Impaye --> Paye : Paiement complet enregistré\n[Montant = Montant total]
+
+EnAttente --> Paye : Validation du paiement\n[Montant complet]
+EnAttente --> Partiel : Validation du paiement\n[Montant partiel]
+EnAttente --> Impaye : Rejet/Annulation du paiement\n[Chèque impayé / Virement échoué]
+
+Partiel --> Paye : Complément de paiement\n[Montant total atteint]
+Partiel --> Partiel : Nouveau paiement partiel\n[Montant total non atteint]
+note on link
+  Plusieurs paiements
+  partiels possibles
+end note
+
+Paye --> Rembourse : Remboursement demandé\n[Cas exceptionnel]
+
+Rembourse --> Impaye : Réinscription / Nouvelle période\n[Remboursement effectué]
+
+' Auto-transitions (événements sur même état)
+Impaye --> Impaye : Rappel de paiement envoyé
+note on link
+  Génération de rappels
+  automatiques périodiques
+end note
+
+Partiel --> Partiel : Rappel de solde envoyé
+note on link
+  Notification du montant
+  restant à payer
+end note
+
+' État final (optionnel)
+Paye --> [*] : Fin du trimestre\n[Archivage]
+
+Rembourse --> [*] : Clôture du dossier
+
+' Notes explicatives
+note right of Impaye
+  État par défaut au début
+  de chaque trimestre.
+
+  Déclencheurs possibles:
+  - Nouveau trimestre activé
+  - Étudiant nouvellement inscrit
+  - Précédent trimestre cloturé
+
+  Conséquences:
+  - Badge désactivé
+  - Accès refusé
+  - Notifications envoyées
+end note
+
+note right of Partiel
+  Politique de paiement partiel:
+
+  Autorisation conditionnelle:
+  - Peut être configuré pour
+    autoriser accès après X%
+  - Par défaut: accès bloqué
+    jusqu'à paiement complet
+
+  Suivi:
+  - Historique des versements
+  - Calcul du solde restant
+  - Échéances de complément
+end note
+
+note bottom of Paye
+  État final normal.
+
+  Actions automatiques:
+  1. Activation du badge
+  2. Génération du reçu
+  3. Envoi notification confirmation
+  4. Mise à jour droits d'accès
+  5. Enregistrement historique
+
+  Le paiement peut couvrir:
+  - Le trimestre en cours
+  - Des trimestres futurs (avance)
+end note
+
+note left of EnAttente
+  Délais de validation:
+  - Virement: 1-3 jours
+  - Chèque: 3-5 jours
+  - Mobile Money: immédiat
+
+  Pendant l'attente:
+  - Accès NON autorisé
+  - Suivi du statut
+  - Relances si nécessaire
+end note
+
+note left of Rembourse
+  Cas de remboursement:
+  - Abandon de scolarité
+  - Erreur de paiement
+  - Changement d'établissement
+  - Décision administrative
+
+  Procédure:
+  1. Demande documentée
+  2. Validation direction
+  3. Traitement comptable
+  4. Remboursement effectué
+  5. Désactivation badge
+end note
+
+' Contraintes et règles
+note as N1
+  <b>Règles métier importantes:</b>
+
+  1. <b>Unicité:</b> Un seul paiement actif par (Étudiant, Trimestre)
+
+  2. <b>Montants:</b>
+     - Paiement partiel autorisé si configuré
+     - Montant minimum configurable
+     - Paiements cumulatifs possibles
+
+  3. <b>Délais:</b>
+     - Date limite de paiement configurable
+     - Pénalités de retard (optionnel)
+
+  4. <b>Modes de paiement:</b>
+     - Espèces: validation immédiate → Payé
+     - Virement/Chèque: validation différée → En Attente
+     - Mobile Money: validation immédiate → Payé
+
+  5. <b>Historique:</b>
+     - Toutes les transitions sont tracées
+     - Modification de statut enregistrée
+end note
+
+' Événements temporels
+note as N2
+  <b>Événements automatiques:</b>
+
+  - <b>Rappel J+7:</b> Premier rappel automatique (Impayé)
+  - <b>Rappel J+14:</b> Deuxième rappel (Impayé)
+  - <b>Rappel J+21:</b> Alerte finale (Impayé)
+
+  - <b>Validation J+3:</b> Relance validation (En Attente)
+
+  - <b>Complément J+30:</b> Rappel solde (Partiel)
+end note
+
+@enduml

@@ -1,0 +1,204 @@
+@startuml Activite_Inscription_Etudiant
+title Système de Contrôle d'Accès\nDiagramme d'Activité - Processus d'Inscription d'un Nouvel Étudiant
+
+|Administrateur|
+start
+:Accéder au module\n"Gestion des étudiants";
+
+:Cliquer sur "Nouvel étudiant";
+
+|Système|
+:Afficher formulaire d'inscription;
+:Initialiser les champs vides;
+
+|Administrateur|
+:Saisir les informations obligatoires;
+note right
+  Champs obligatoires:
+  - Nom
+  - Prénom
+  - Date de naissance
+  - Classe
+
+  Champs optionnels:
+  - Email
+  - Téléphone
+  - Photo
+end note
+
+if (Photo disponible ?) then (oui)
+  :Charger la photo de l'étudiant;
+
+  |Système|
+  :Redimensionner et optimiser l'image;
+  :Valider format (JPG, PNG);
+else (non)
+  :Continuer sans photo;
+  note right
+    La photo peut être
+    ajoutée ultérieurement
+  end note
+endif
+
+|Administrateur|
+:Sélectionner la classe;
+
+|Système|
+:Charger liste des classes disponibles;
+
+|Administrateur|
+:Soumettre le formulaire;
+
+|Système|
+:Valider les données saisies;
+
+if (Données valides ?) then (oui)
+
+  :Vérifier unicité\n(même nom + prénom + date naissance);
+
+  if (Étudiant existe déjà ?) then (oui)
+    #Orange:Afficher avertissement;
+    note right
+      "Un étudiant similaire existe.
+      Voulez-vous continuer ?"
+    end note
+
+    |Administrateur|
+    if (Confirmer création ?) then (oui)
+      ' Continue
+    else (non)
+      :Annuler l'opération;
+      stop
+    endif
+  else (non)
+    ' Continue
+  endif
+
+  |Système|
+  :Créer l'enregistrement étudiant;
+  :Générer ID unique;
+  :Définir statut = ACTIF;
+  :Enregistrer dans la BD;
+
+  :Afficher confirmation\n+ ID étudiant généré;
+
+  |Administrateur|
+  :Consulter les informations créées;
+
+  if (Attribuer un badge maintenant ?) then (oui)
+
+    |Système|
+    :Afficher liste des badges disponibles;
+    note right
+      Afficher uniquement les badges:
+      - Type = ETUDIANT
+      - Statut = INACTIF ou NON_ATTRIBUE
+    end note
+
+    |Administrateur|
+    if (Badge disponible ?) then (oui)
+      :Sélectionner un badge existant;
+    else (non)
+      :Saisir nouveau numéro de badge;
+
+      |Système|
+      :Vérifier unicité du numéro;
+
+      if (Numéro unique ?) then (oui)
+        :Créer nouveau badge;
+        :Type = ETUDIANT;
+      else (non)
+        #Pink:Afficher erreur\n"Badge déjà utilisé";
+        stop
+      endif
+    endif
+
+    |Système|
+    :Associer badge à l'étudiant;
+    :Définir date d'activation = maintenant;
+
+    if (Paiement déjà effectué ?) then (oui)
+      :Activer le badge;
+      :Statut badge = ACTIF;
+    else (non)
+      :Badge en attente de paiement;
+      :Statut badge = INACTIF;
+      note right
+        Le badge sera activé
+        automatiquement lors
+        du 1er paiement
+      end note
+    endif
+
+    :Enregistrer l'association\nbadge-étudiant;
+
+    |Administrateur|
+    :Remettre le badge à l'étudiant;
+    note right
+      Actions physiques:
+      1. Programmer le badge
+      2. Tester le badge
+      3. Remettre à l'étudiant
+    end note
+
+  else (non - badge ultérieurement)
+    :Passer cette étape;
+    note right
+      Le badge pourra être
+      attribué plus tard via
+      "Modifier étudiant"
+    end note
+  endif
+
+  |Système|
+  :Enregistrer dans l'historique;
+  note right
+    Action: CREATION_ETUDIANT
+    Effectué par: [Admin]
+    Date/Heure: [Timestamp]
+    Détails: ID étudiant, nom, classe
+  end note
+
+  fork
+    |Système|
+    :Mettre à jour le compteur\nd'étudiants actifs;
+  fork again
+    |Système|
+    if (Email parent fourni ?) then (oui)
+      :Envoyer email de bienvenue;
+      note right
+        Contenu:
+        - Infos étudiant
+        - Numéro de badge
+        - Procédure de paiement
+      end note
+    endif
+  end fork
+
+  |Administrateur|
+  #LightGreen:Inscription terminée avec succès;
+
+  if (Inscrire un autre étudiant ?) then (oui)
+    :Réinitialiser le formulaire;
+    detach
+  else (non)
+    stop
+  endif
+
+else (non - données invalides)
+  #Pink:Afficher les erreurs de validation;
+  note right
+    Exemples d'erreurs:
+    - Champs obligatoires vides
+    - Email invalide
+    - Date de naissance invalide
+    - Classe non sélectionnée
+  end note
+
+  |Administrateur|
+  :Corriger les erreurs;
+  :Soumettre à nouveau;
+  detach
+endif
+
+@enduml

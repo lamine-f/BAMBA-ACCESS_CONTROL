@@ -1,0 +1,204 @@
+@startuml Sequence_Controle_Acces
+title Système de Contrôle d'Accès\nDiagramme de Séquence - Contrôle d'Accès Étudiant
+
+actor "Étudiant" as etudiant
+participant "Lecteur\nde Badge" as lecteur
+participant "Service\nContrôle Accès" as service
+database "Base de\nDonnées" as bd
+participant "Système\nPhysique" as systeme
+
+== Scénario Nominal : Accès Autorisé ==
+
+etudiant -> lecteur : Présente le badge
+activate lecteur
+
+lecteur -> lecteur : Lit le numéro de badge
+lecteur -> service : verifierBadge(numeroBadge)
+activate service
+
+service -> bd : rechercherBadge(numeroBadge)
+activate bd
+bd --> service : Badge trouvé
+deactivate bd
+
+service -> service : Vérifier statut du badge
+alt Badge actif
+    service -> bd : obtenirEtudiant(idBadge)
+    activate bd
+    bd --> service : Etudiant
+    deactivate bd
+
+    service -> service : Vérifier statut étudiant
+    alt Étudiant actif
+        service -> bd : obtenirTrimestreEnCours()
+        activate bd
+        bd --> service : Trimestre actuel
+        deactivate bd
+
+        service -> bd : verifierPaiement(idEtudiant, idTrimestre)
+        activate bd
+        bd --> service : Paiement OK (PAYE)
+        deactivate bd
+
+        service -> service : Créer ResultatVerification(autorisé)
+        service -> bd : enregistrerPassage(badge, AUTORISE, dateHeure)
+        activate bd
+        bd --> service : Passage enregistré
+        deactivate bd
+
+        service --> lecteur : Accès AUTORISE
+        deactivate service
+
+        lecteur -> systeme : Ouvrir porte/barrière
+        activate systeme
+        lecteur -> lecteur : Signal visuel/sonore POSITIF
+        lecteur -> lecteur : Afficher "Accès autorisé"
+        lecteur --> etudiant : Affiche nom, classe, heure
+        systeme --> systeme : Barrière ouverte (3 secondes)
+        deactivate systeme
+
+    else Étudiant inactif/suspendu
+        service -> service : Créer motif refus
+        service -> bd : enregistrerPassage(badge, REFUSE, "Étudiant inactif")
+        activate bd
+        bd --> service : Passage refusé enregistré
+        deactivate bd
+
+        service --> lecteur : Accès REFUSE (Étudiant inactif)
+        deactivate service
+
+        lecteur -> lecteur : Signal visuel/sonore NEGATIF
+        lecteur --> etudiant : Affiche "Accès refusé - Compte inactif"
+    end
+
+else Badge bloqué/inactif
+    service -> bd : enregistrerPassage(badge, REFUSE, "Badge bloqué")
+    activate bd
+    bd --> service : Passage refusé enregistré
+    deactivate bd
+
+    service --> lecteur : Accès REFUSE (Badge bloqué)
+    deactivate service
+
+    lecteur -> lecteur : Signal visuel/sonore NEGATIF
+    lecteur --> etudiant : Affiche "Badge bloqué - Contactez l'administration"
+end
+
+deactivate lecteur
+
+== Scénario Alternatif 1 : Paiement Manquant ==
+
+etudiant -> lecteur : Présente le badge
+activate lecteur
+
+lecteur -> service : verifierBadge(numeroBadge)
+activate service
+
+service -> bd : rechercherBadge(numeroBadge)
+activate bd
+bd --> service : Badge trouvé
+deactivate bd
+
+service -> bd : obtenirEtudiant(idBadge)
+activate bd
+bd --> service : Etudiant
+deactivate bd
+
+service -> bd : verifierPaiement(idEtudiant, idTrimestre)
+activate bd
+bd --> service : Paiement KO (IMPAYE)
+deactivate bd
+
+service -> service : Créer ResultatVerification(refusé)
+service -> bd : enregistrerPassage(badge, REFUSE_PAIEMENT_MANQUANT)
+activate bd
+bd --> service : Passage refusé enregistré
+deactivate bd
+
+service --> lecteur : Accès REFUSE (Paiement manquant)
+deactivate service
+
+lecteur -> lecteur : Signal visuel/sonore NEGATIF
+lecteur -> lecteur : Affiche "Trimestre impayé"
+lecteur --> etudiant : Affiche montant dû + contact administration
+
+deactivate lecteur
+
+== Scénario Alternatif 2 : Badge Inconnu ==
+
+etudiant -> lecteur : Présente un badge invalide
+activate lecteur
+
+lecteur -> service : verifierBadge(numeroBadge)
+activate service
+
+service -> bd : rechercherBadge(numeroBadge)
+activate bd
+bd --> service : Badge NON trouvé
+deactivate bd
+
+service -> bd : enregistrerTentativeAcces(numeroBadge, REFUSE_BADGE_INVALIDE)
+activate bd
+bd --> service : Tentative enregistrée
+deactivate bd
+
+service -> service : Alerte sécurité (optionnel)
+service --> lecteur : Accès REFUSE (Badge inconnu)
+deactivate service
+
+lecteur -> lecteur : Signal visuel/sonore NEGATIF
+lecteur -> lecteur : Affiche "Badge non reconnu"
+lecteur --> etudiant : Contact sécurité/administration
+
+deactivate lecteur
+
+== Scénario Alternatif 3 : Badge Visiteur ==
+
+participant "Visiteur" as visiteur
+
+visiteur -> lecteur : Présente badge visiteur
+activate lecteur
+
+lecteur -> service : verifierBadge(numeroBadge)
+activate service
+
+service -> bd : rechercherBadge(numeroBadge)
+activate bd
+bd --> service : Badge VISITEUR trouvé
+deactivate bd
+
+service -> bd : obtenirVisiteur(idBadge)
+activate bd
+bd --> service : Visiteur
+deactivate bd
+
+service -> service : Vérifier période validité
+alt Dans la période de validité
+    service -> bd : enregistrerPassage(badge, AUTORISE)
+    activate bd
+    bd --> service : Passage enregistré
+    deactivate bd
+
+    service --> lecteur : Accès AUTORISE
+    deactivate service
+
+    lecteur -> systeme : Ouvrir porte
+    lecteur -> lecteur : Signal POSITIF
+    lecteur --> visiteur : Affiche nom visiteur + organisation
+
+else Hors période de validité
+    service -> bd : enregistrerPassage(badge, REFUSE_BADGE_EXPIRE)
+    activate bd
+    bd --> service : Passage refusé enregistré
+    deactivate bd
+
+    service --> lecteur : Accès REFUSE
+    deactivate service
+
+    lecteur -> lecteur : Signal NEGATIF
+    lecteur --> visiteur : Badge expiré
+end
+
+deactivate lecteur
+
+@enduml

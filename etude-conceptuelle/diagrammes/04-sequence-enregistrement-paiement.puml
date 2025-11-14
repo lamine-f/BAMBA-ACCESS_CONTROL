@@ -1,0 +1,202 @@
+@startuml Sequence_Enregistrement_Paiement
+title Système de Contrôle d'Accès\nDiagramme de Séquence - Enregistrement d'un Paiement Trimestriel
+
+actor "Administrateur" as admin
+participant "Interface\nAdmin" as ui
+participant "Service\nPaiement" as servicePmt
+participant "Service\nContrôle Accès" as serviceAcces
+database "Base de\nDonnées" as bd
+participant "Générateur\nReçu" as recu
+
+== Initialisation ==
+
+admin -> ui : Accéder à "Enregistrer paiement"
+activate ui
+
+ui -> bd : obtenirListeEtudiants()
+activate bd
+bd --> ui : Liste des étudiants
+deactivate bd
+
+ui -> bd : obtenirTrimestreEnCours()
+activate bd
+bd --> ui : Trimestre actuel
+deactivate bd
+
+ui --> admin : Affiche formulaire de paiement
+
+== Sélection de l'étudiant ==
+
+admin -> ui : Recherche et sélectionne l'étudiant
+ui -> bd : obtenirDetailsEtudiant(idEtudiant)
+activate bd
+bd --> ui : Détails étudiant (nom, prénom, classe, photo)
+deactivate bd
+
+ui -> bd : obtenirHistoriquePaiements(idEtudiant)
+activate bd
+bd --> ui : Liste paiements (Trimestre 1, 2, 3)
+deactivate bd
+
+ui --> admin : Affiche infos étudiant + statut paiements
+
+== Vérification du paiement existant ==
+
+admin -> ui : Sélectionne le trimestre à payer
+ui -> servicePmt : verifierPaiementExistant(idEtudiant, idTrimestre)
+activate servicePmt
+
+servicePmt -> bd : rechercherPaiement(idEtudiant, idTrimestre)
+activate bd
+bd --> servicePmt : Résultat recherche
+deactivate bd
+
+alt Paiement déjà existant avec statut PAYE
+    servicePmt --> ui : Erreur - Paiement déjà effectué
+    ui --> admin : Message "Ce trimestre est déjà payé"
+    deactivate servicePmt
+
+else Paiement existant avec statut PARTIEL
+    servicePmt --> ui : Paiement partiel existant
+    deactivate servicePmt
+    ui --> admin : Affiche montant restant dû
+    admin -> ui : Décide de compléter le paiement
+
+else Aucun paiement existant
+    servicePmt --> ui : Pas de paiement trouvé
+    deactivate servicePmt
+    ui --> admin : Prêt pour nouveau paiement
+end
+
+== Saisie des informations de paiement ==
+
+admin -> ui : Saisit les détails :
+note right
+  - Montant payé
+  - Mode de paiement
+  - Référence/numéro reçu
+  - Date de paiement
+end note
+
+ui -> ui : Valider les données saisies
+alt Données invalides
+    ui --> admin : Message d'erreur (montant négatif, date future, etc.)
+    admin -> ui : Corrige les informations
+end
+
+== Enregistrement du paiement ==
+
+admin -> ui : Clique sur "Enregistrer"
+ui -> servicePmt : enregistrerPaiement(paiementDTO)
+activate servicePmt
+
+servicePmt -> servicePmt : Valider les règles métier
+note right
+  - Montant > 0
+  - Date <= aujourd'hui
+  - Mode paiement valide
+  - Référence unique
+end note
+
+alt Validation réussie
+    servicePmt -> bd : creerPaiementTrimestre(paiement)
+    activate bd
+    bd --> servicePmt : Paiement créé (idPaiement)
+    deactivate bd
+
+    servicePmt -> servicePmt : Déterminer statut paiement
+    alt Montant = montant trimestre
+        servicePmt -> servicePmt : statut = PAYE
+    else Montant < montant trimestre
+        servicePmt -> servicePmt : statut = PARTIEL
+    end
+
+    servicePmt -> bd : mettreAJourStatutPaiement(idPaiement, statut)
+    activate bd
+    bd --> servicePmt : Statut mis à jour
+    deactivate bd
+
+    == Mise à jour des droits d'accès ==
+
+    alt Statut = PAYE
+        servicePmt -> serviceAcces : activerAccesEtudiant(idEtudiant, idTrimestre)
+        activate serviceAcces
+
+        serviceAcces -> bd : obtenirBadgeEtudiant(idEtudiant)
+        activate bd
+        bd --> serviceAcces : Badge
+        deactivate bd
+
+        serviceAcces -> bd : activerBadge(idBadge)
+        activate bd
+        bd --> serviceAcces : Badge activé
+        deactivate bd
+
+        serviceAcces --> servicePmt : Accès activé
+        deactivate serviceAcces
+    end
+
+    == Enregistrement dans l'historique ==
+
+    servicePmt -> bd : enregistrerHistorique(admin, action, details)
+    activate bd
+    note right
+      Action: "ENREGISTREMENT_PAIEMENT"
+      Détails: Étudiant, Trimestre, Montant
+    end note
+    bd --> servicePmt : Historique enregistré
+    deactivate bd
+
+    == Génération du reçu ==
+
+    servicePmt -> recu : genererRecu(paiement, etudiant, trimestre)
+    activate recu
+
+    recu -> recu : Créer le document PDF
+    note right
+      Contenu du reçu:
+      - Infos établissement
+      - Infos étudiant
+      - Détails paiement
+      - QR code/code-barres
+      - Signature numérique
+    end note
+
+    recu --> servicePmt : Reçu généré (PDF)
+    deactivate recu
+
+    servicePmt -> bd : sauvegarderRecu(idPaiement, fichierPDF)
+    activate bd
+    bd --> servicePmt : Reçu sauvegardé
+    deactivate bd
+
+    servicePmt --> ui : Paiement enregistré avec succès
+    deactivate servicePmt
+
+    == Confirmation et affichage ==
+
+    ui --> admin : Message de succès + aperçu reçu
+    admin -> ui : Visualise/Imprime le reçu
+
+    ui -> ui : Rafraîchir statut paiements étudiant
+    ui --> admin : Affiche statut mis à jour
+
+else Validation échouée
+    servicePmt --> ui : Erreur de validation
+    deactivate servicePmt
+    ui --> admin : Message d'erreur détaillé
+end
+
+deactivate ui
+
+== Scénario Alternatif : Notification automatique ==
+
+opt Paiement complété
+    servicePmt -> servicePmt : Déclencher notification
+    note right
+      Email/SMS de confirmation
+      au responsable de l'étudiant
+    end note
+end
+
+@enduml

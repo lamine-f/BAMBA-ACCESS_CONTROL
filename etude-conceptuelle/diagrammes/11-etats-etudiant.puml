@@ -1,0 +1,293 @@
+@startuml Etats_Etudiant
+title Système de Contrôle d'Accès\nDiagramme d'États - Statut d'un Étudiant
+
+[*] --> Inscrit : Création du dossier
+
+state "Inscrit" as Inscrit {
+  Inscrit : Dossier créé dans le système
+  Inscrit : Informations saisies
+  Inscrit : Badge non encore attribué
+  Inscrit : --
+  Inscrit : Finalisation en cours
+}
+
+state "Actif" as Actif {
+  Actif : Étudiant opérationnel
+  Actif : Badge attribué et fonctionnel
+  Actif : Peut accéder à l'établissement
+  Actif : --
+  Actif : Passages enregistrés
+  Actif : État normal d'utilisation
+}
+
+state "Suspendu" as Suspendu {
+  Suspendu : Compte temporairement désactivé
+  Suspendu : Accès bloqué
+  Suspendu : Motif documenté
+  Suspendu : --
+  Suspendu : Peut être réactivé
+}
+
+state "Inactif" as Inactif {
+  Inactif : Compte désactivé
+  Inactif : Fin de scolarité
+  Inactif : Transfert établissement
+  Inactif : --
+  Inactif : Badge récupéré
+  Inactif : Données archivées
+}
+
+state "En Congé" as EnConge {
+  EnConge : Absence temporaire prolongée
+  EnConge : Accès suspendu temporairement
+  EnConge : Dossier conservé
+  EnConge : --
+  EnConge : Date de retour prévue
+}
+
+state "Radié" as Radie {
+  Radie : Exclusion définitive
+  Radie : Accès révoqué
+  Radie : Mesure disciplinaire
+  Radie : --
+  Radie : Décision irrévocable
+}
+
+' Transitions principales
+Inscrit --> Actif : Finalisation inscription\n[Badge attribué]
+note on link
+  Actions:
+  - Attribution badge
+  - Activation compte
+  - Photo ajoutée
+end note
+
+Inscrit --> Inactif : Annulation inscription\n[Avant finalisation]
+
+Actif --> Suspendu : Suspension temporaire
+note on link
+  Motifs possibles:
+  - Impayés répétés
+  - Problème disciplinaire
+  - Enquête en cours
+  - Demande administrative
+end note
+
+Actif --> EnConge : Demande de congé acceptée\n[Maladie, voyage, etc.]
+
+Actif --> Radie : Exclusion définitive\n[Décision direction]
+
+Actif --> Inactif : Fin de scolarité / Transfert\n[Départ normal]
+
+Suspendu --> Actif : Levée de suspension\n[Problème résolu]
+note on link
+  Conditions:
+  - Régularisation situation
+  - Validation direction
+  - Réactivation badge
+end note
+
+Suspendu --> Radie : Aggravation de la situation\n[Décision disciplinaire]
+
+Suspendu --> Inactif : Abandon définitif\n[Non régularisation]
+
+EnConge --> Actif : Retour de congé\n[Date retour atteinte]
+note on link
+  Reprise automatique ou
+  validation manuelle selon
+  durée du congé
+end note
+
+EnConge --> Inactif : Non retour / Abandon\n[Dépassement durée]
+
+' États finaux
+Radie --> [*] : Archivage définitif
+Inactif --> [*] : Archivage du dossier
+
+' Réactivation exceptionnelle
+Inactif --> Actif : Réinscription\n[Cas exceptionnel]
+note on link
+  Rare - Nécessite validation
+  et nouveau dossier
+end note
+
+' Auto-transitions
+Actif --> Actif : Mise à jour informations\n[Photo, classe, contacts]
+
+Actif --> Actif : Paiement trimestre\n[Maintien des droits]
+
+Suspendu --> Suspendu : Prolongation suspension\n[Nouvelle décision]
+
+' Notes explicatives
+note right of Inscrit
+  État initial transitoire.
+
+  Durée: Quelques minutes à quelques jours
+
+  Checklist avant activation:
+  ☐ Informations complètes
+  ☐ Photo uploadée
+  ☐ Classe assignée
+  ☐ Badge attribué
+  ☐ Paiement initial (optionnel)
+
+  Le compte reste en "Inscrit"
+  tant que tous les éléments
+  ne sont pas finalisés.
+end note
+
+note right of Actif
+  État nominal et opérationnel.
+
+  Caractéristiques:
+  - Présence quotidienne enregistrée
+  - Historique de passages tracé
+  - Paiements trimestres gérés
+  - Accès selon paiement
+
+  Sous-états possibles:
+  - Actif avec accès (trimestre payé)
+  - Actif sans accès (trimestre impayé)
+
+  Note: Le statut "Actif" signifie
+  compte opérationnel, mais l'accès
+  physique dépend du paiement.
+end note
+
+note bottom of Suspendu
+  Suspension = Blocage temporaire
+
+  Différence avec "Actif sans accès":
+  - Suspendu: Problème bloquant
+    (disciplinaire, administratif)
+  - Actif impayé: Simple non-paiement
+
+  Durée de suspension:
+  - Définie ou indéterminée
+  - Révision périodique
+  - Notification automatique
+
+  Pendant suspension:
+  - Aucun accès possible
+  - Badge bloqué
+  - Présence non comptabilisée
+end note
+
+note left of EnConge
+  Congé autorisé = Absence justifiée
+
+  Types de congé:
+  - Médical (maladie, hospitalisation)
+  - Familial (deuil, événement)
+  - Académique (stage, échange)
+  - Autre (voyage, personnel)
+
+  Gestion:
+  - Date début et fin définies
+  - Justificatif fourni
+  - Badge conservé ou restitué
+  - Paiements maintenus ou suspendus
+
+  Impact:
+  - Absences non comptabilisées
+  - Accès suspendu temporairement
+  - Réactivation automatique ou manuelle
+end note
+
+note left of Radie
+  Radiation = Exclusion définitive
+
+  Causes possibles:
+  - Faute grave
+  - Violation règlement
+  - Décision conseil discipline
+
+  Conséquences:
+  1. Blocage immédiat badge
+  2. Récupération badge physique
+  3. Notification officielle
+  4. Archivage dossier
+  5. Impossibilité réinscription
+
+  Traçabilité:
+  - Motif détaillé enregistré
+  - Décision documentée
+  - Historique conservé
+end note
+
+note bottom of Inactif
+  Inactif = Fin normale ou abandon
+
+  Différence avec Radié:
+  - Inactif: Départ normal/volontaire
+  - Radié: Exclusion disciplinaire
+
+  Causes d'inactivation:
+  - Fin de cycle (diplômé)
+  - Transfert établissement
+  - Abandon volontaire
+  - Déménagement
+
+  Actions:
+  1. Récupération badge
+  2. Règlement solde (si impayé)
+  3. Remise documents
+  4. Archivage données
+  5. Libération place
+
+  Conservation:
+  - Historique conservé 5+ ans
+  - Statistiques anonymisées
+end note
+
+' Règles métier
+note as N1
+  <b>Règles de transition:</b>
+
+  <b>1. Activation (Inscrit → Actif):</b>
+     - Badge obligatoire
+     - Classe assignée
+     - Photo recommandée
+     - Validation admin
+
+  <b>2. Suspension (Actif → Suspendu):</b>
+     - Motif obligatoire
+     - Durée définie ou indéterminée
+     - Notification automatique
+     - Validation hiérarchique
+
+  <b>3. Radiation (→ Radié):</b>
+     - Décision formelle requise
+     - Document justificatif
+     - Notification officielle
+     - Irrévocable (sauf exception)
+
+  <b>4. Inactivation (→ Inactif):</b>
+     - Vérification impayés
+     - Récupération badge
+     - Transfert historique
+     - Archivage données
+end note
+
+' Événements automatiques
+note as N2
+  <b>Transitions automatiques:</b>
+
+  • <b>Fin de cycle:</b>
+    Actif → Inactif
+    [Fin année académique]
+
+  • <b>Retour de congé:</b>
+    En Congé → Actif
+    [Date retour atteinte]
+
+  • <b>Dépassement congé:</b>
+    En Congé → Inactif
+    [Retour non effectué + X jours]
+
+  • <b>Suspension expirée:</b>
+    Suspendu → Actif
+    [Fin période + validation]
+end note
+
+@enduml

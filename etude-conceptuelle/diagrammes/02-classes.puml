@@ -1,0 +1,350 @@
+@startuml Diagramme_Classes
+title Système de Contrôle d'Accès pour Étudiants\nDiagramme de Classes
+
+' Configuration
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor<<Entity>> LightYellow
+    BackgroundColor<<ValueObject>> LightGreen
+    BackgroundColor<<Service>> LightBlue
+}
+
+' ========== CLASSES PRINCIPALES ==========
+
+class Etudiant <<Entity>> {
+  - idEtudiant : Integer {PK}
+  - nom : String
+  - prenom : String
+  - dateNaissance : Date
+  - photo : Blob
+  - email : String
+  - telephone : String
+  - dateInscription : Date
+  - statut : StatutEtudiant
+  --
+  + creer() : Etudiant
+  + modifier() : void
+  + supprimer() : void
+  + verifierPaiementTrimestre(trimestre : Trimestre) : Boolean
+  + calculerTauxPresence(debut : Date, fin : Date) : Float
+  + obtenirHistoriquePassages(debut : Date, fin : Date) : List<Passage>
+  + activerAcces() : void
+  + desactiverAcces() : void
+}
+
+class Badge <<Entity>> {
+  - idBadge : Integer {PK}
+  - numeroBadge : String {Unique}
+  - typeBadge : TypeBadge
+  - dateActivation : DateTime
+  - dateExpiration : DateTime
+  - statut : StatutBadge
+  --
+  + creer(type : TypeBadge) : Badge
+  + activer() : void
+  + desactiver() : void
+  + bloquer(motif : String) : void
+  + estValide() : Boolean
+  + estActif() : Boolean
+  + verifierValidite() : Boolean
+}
+
+class Classe <<Entity>> {
+  - idClasse : Integer {PK}
+  - nomClasse : String
+  - niveau : String
+  - filiere : String
+  - anneeAcademique : String
+  --
+  + creer() : Classe
+  + modifier() : void
+  + obtenirEtudiants() : List<Etudiant>
+  + calculerTauxPresence(date : Date) : Float
+  + obtenirEffectif() : Integer
+}
+
+class Trimestre <<Entity>> {
+  - idTrimestre : Integer {PK}
+  - numeroTrimestre : Integer
+  - anneeAcademique : String
+  - dateDebut : Date
+  - dateFin : Date
+  - montant : Decimal
+  - statut : StatutTrimestre
+  --
+  + creer() : Trimestre
+  + cloturer() : void
+  + estEnCours() : Boolean
+  + verifierPeriode(date : Date) : Boolean
+}
+
+class PaiementTrimestre <<Entity>> {
+  - idPaiement : Integer {PK}
+  - datePaiement : DateTime
+  - montantPaye : Decimal
+  - modePaiement : ModePaiement
+  - referencePaiement : String
+  - statut : StatutPaiement
+  --
+  + enregistrer() : PaiementTrimestre
+  + modifier() : void
+  + genererRecu() : Document
+  + verifierStatut() : StatutPaiement
+}
+
+class Passage <<Entity>> {
+  - idPassage : Integer {PK}
+  - dateHeurePassage : DateTime
+  - typePassage : TypePassage
+  - resultat : ResultatPassage
+  - motifRefus : String
+  - localisationPorte : String
+  --
+  + enregistrer() : Passage
+  + obtenirDetails() : Map<String, Object>
+}
+
+class Visiteur <<Entity>> {
+  - idVisiteur : Integer {PK}
+  - nom : String
+  - prenom : String
+  - organisation : String
+  - motifVisite : String
+  - personneContact : String
+  - telephone : String
+  - dateDebut : DateTime
+  - dateFin : DateTime
+  --
+  + creer() : Visiteur
+  + modifier() : void
+  + prolongerVisite(nouvelleDateFin : DateTime) : void
+  + estValide() : Boolean
+}
+
+class Administrateur <<Entity>> {
+  - idAdministrateur : Integer {PK}
+  - nom : String
+  - prenom : String
+  - login : String {Unique}
+  - motDePasse : String
+  - role : RoleAdmin
+  - email : String
+  - dateCreation : DateTime
+  - dernierAcces : DateTime
+  --
+  + seConnecter(login : String, mdp : String) : Boolean
+  + seDeconnecter() : void
+  + modifierMotDePasse(ancien : String, nouveau : String) : void
+}
+
+class HistoriqueModification <<Entity>> {
+  - idHistorique : Integer {PK}
+  - typeEntite : String
+  - idEntite : Integer
+  - actionEffectuee : String
+  - dateHeureAction : DateTime
+  - detailsModification : Text
+  --
+  + enregistrer() : void
+  + consulter(filtres : Map) : List<HistoriqueModification>
+}
+
+' ========== CLASSES DE SERVICE ==========
+
+class ServiceControlAcces <<Service>> {
+  --
+  + verifierBadge(numeroBadge : String) : ResultatVerification
+  + autoriserAcces(badge : Badge) : Boolean
+  + refuserAcces(badge : Badge, motif : String) : void
+  + enregistrerPassage(badge : Badge, resultat : ResultatPassage) : Passage
+}
+
+class ServicePaiement <<Service>> {
+  --
+  + enregistrerPaiement(etudiant : Etudiant, trimestre : Trimestre, montant : Decimal) : PaiementTrimestre
+  + verifierPaiement(etudiant : Etudiant, trimestre : Trimestre) : Boolean
+  + calculerImpaye(etudiant : Etudiant) : Decimal
+  + genererRappelPaiement(etudiant : Etudiant) : void
+}
+
+class ServiceRapport <<Service>> {
+  --
+  + genererRapportPresence(debut : Date, fin : Date, classe : Classe) : Rapport
+  + genererRapportPaiements(trimestre : Trimestre) : Rapport
+  + genererRapportVisiteurs(debut : Date, fin : Date) : Rapport
+  + calculerStatistiques() : Map<String, Object>
+  + exporterRapport(rapport : Rapport, format : FormatExport) : File
+}
+
+class ServiceNotification <<Service>> {
+  --
+  + envoyerNotificationParents(etudiant : Etudiant, message : String) : void
+  + envoyerAlerteAdmin(message : String) : void
+  + envoyerRappelPaiement(etudiant : Etudiant) : void
+}
+
+' ========== ÉNUMÉRATIONS ==========
+
+enum StatutEtudiant {
+  ACTIF
+  INACTIF
+  SUSPENDU
+}
+
+enum TypeBadge {
+  ETUDIANT
+  VISITEUR
+  PERSONNEL
+}
+
+enum StatutBadge {
+  ACTIF
+  INACTIF
+  BLOQUE
+  PERDU
+  VOLE
+}
+
+enum StatutTrimestre {
+  EN_PREPARATION
+  EN_COURS
+  CLOTURE
+}
+
+enum StatutPaiement {
+  IMPAYE
+  PARTIEL
+  PAYE
+}
+
+enum ModePaiement {
+  ESPECES
+  CHEQUE
+  VIREMENT
+  MOBILE_MONEY
+  CARTE_BANCAIRE
+}
+
+enum TypePassage {
+  ENTREE
+  SORTIE
+}
+
+enum ResultatPassage {
+  AUTORISE
+  REFUSE_BADGE_INVALIDE
+  REFUSE_PAIEMENT_MANQUANT
+  REFUSE_BADGE_BLOQUE
+  REFUSE_BADGE_EXPIRE
+}
+
+enum RoleAdmin {
+  SUPER_ADMIN
+  ADMIN
+  OPERATEUR
+}
+
+enum FormatExport {
+  PDF
+  EXCEL
+  CSV
+}
+
+' ========== VALUE OBJECTS ==========
+
+class ResultatVerification <<ValueObject>> {
+  - badgeValide : Boolean
+  - paiementOK : Boolean
+  - etudiant : Etudiant
+  - motifRefus : String
+  --
+  + estAutorise() : Boolean
+}
+
+class Rapport <<ValueObject>> {
+  - titre : String
+  - dateGeneration : DateTime
+  - generePar : Administrateur
+  - contenu : Object
+  - parametres : Map
+  --
+  + generer() : void
+  + exporter(format : FormatExport) : File
+}
+
+' ========== RELATIONS ==========
+
+' Relations Etudiant
+Etudiant "1" --> "0..1" Badge : possède >
+Etudiant "*" --> "1" Classe : appartient à >
+Etudiant "1" --> "0..3" PaiementTrimestre : effectue >
+Etudiant "1" ..> "*" Passage : génère >
+
+' Relations Badge
+Badge "1" --> "*" Passage : enregistre >
+Badge "0..1" --> "1" Visiteur : attribué à >
+Badge --> TypeBadge
+Badge --> StatutBadge
+
+' Relations Trimestre
+Trimestre "1" --> "*" PaiementTrimestre : concerne >
+Trimestre --> StatutTrimestre
+
+' Relations PaiementTrimestre
+PaiementTrimestre --> StatutPaiement
+PaiementTrimestre --> ModePaiement
+
+' Relations Passage
+Passage --> TypePassage
+Passage --> ResultatPassage
+
+' Relations Classe
+Classe "1" --> "*" Etudiant : contient >
+
+' Relations Administrateur
+Administrateur "1" --> "*" HistoriqueModification : effectue >
+Administrateur --> RoleAdmin
+
+' Relations Visiteur
+Visiteur "1" --> "1" Badge : utilise >
+
+' Relations Etudiant
+Etudiant --> StatutEtudiant
+
+' Relations Services
+ServiceControlAcces ..> Badge : utilise
+ServiceControlAcces ..> Passage : crée
+ServiceControlAcces ..> ResultatVerification : retourne
+ServiceControlAcces ..> Etudiant : vérifie
+
+ServicePaiement ..> PaiementTrimestre : gère
+ServicePaiement ..> Etudiant : gère
+ServicePaiement ..> Trimestre : utilise
+
+ServiceRapport ..> Rapport : génère
+ServiceRapport ..> Passage : analyse
+ServiceRapport ..> Etudiant : analyse
+ServiceRapport ..> Classe : analyse
+
+ServiceNotification ..> Etudiant : notifie
+ServiceNotification ..> Administrateur : alerte
+
+' Notes
+note right of ServiceControlAcces
+  Service principal gérant
+  la logique de contrôle d'accès
+  et la vérification des badges
+end note
+
+note bottom of PaiementTrimestre
+  Un étudiant peut avoir
+  0 à 3 paiements par année
+  (un par trimestre)
+end note
+
+note left of Badge
+  Un badge ETUDIANT est lié à 1 étudiant
+  Un badge VISITEUR est lié à 1 visiteur
+end note
+
+@enduml

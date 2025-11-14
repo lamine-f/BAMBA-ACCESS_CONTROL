@@ -1,0 +1,146 @@
+@startuml Etats_Badge
+title Système de Contrôle d'Accès\nDiagramme d'États - Cycle de Vie d'un Badge
+
+[*] --> NonAttribue : Création du badge
+
+state "Non Attribué" as NonAttribue {
+  NonAttribue : Badge créé mais pas encore\nassocié à un étudiant/visiteur
+  NonAttribue : Disponible pour attribution
+}
+
+state "Inactif" as Inactif {
+  Inactif : Badge attribué mais désactivé
+  Inactif : En attente de paiement\nou d'activation manuelle
+}
+
+state "Actif" as Actif {
+  Actif : Badge opérationnel
+  Actif : Autorise les contrôles d'accès
+  Actif : Passages enregistrés
+}
+
+state "Bloqué" as Bloque {
+  Bloque : Badge temporairement suspendu
+  Bloque : Tentatives d'accès refusées
+  Bloque : Motif enregistré
+}
+
+state "Perdu" as Perdu {
+  Perdu : Badge déclaré perdu
+  Perdu : Définitivement désactivé
+  Perdu : Remplacement en cours
+}
+
+state "Volé" as Vole {
+  Vole : Badge déclaré volé
+  Vole : Blocage immédiat et alerte
+  Vole : Remplacement nécessaire
+}
+
+state "Expiré" as Expire {
+  Expire : Badge visiteur hors validité
+  Expire : Date de fin dépassée
+  Expire : Désactivation automatique
+}
+
+' Transitions depuis Non Attribué
+NonAttribue --> Inactif : Attribution à un étudiant\n[Paiement non effectué]
+NonAttribue --> Actif : Attribution à un étudiant\n[Paiement effectué]
+NonAttribue --> Actif : Attribution à un visiteur\n[Dans période de validité]
+
+' Transitions depuis Inactif
+Inactif --> Actif : Paiement effectué /\nActivation manuelle
+Inactif --> Bloque : Blocage administratif
+Inactif --> Perdu : Déclaration de perte
+Inactif --> Vole : Déclaration de vol
+
+' Transitions depuis Actif
+Actif --> Inactif : Désactivation manuelle /\nNon-paiement trimestre suivant
+Actif --> Bloque : Problème détecté /\nBlocage temporaire
+Actif --> Perdu : Déclaration de perte
+Actif --> Vole : Déclaration de vol
+Actif --> Expire : [Badge visiteur]\nDate de fin atteinte
+
+' Transitions depuis Bloqué
+Bloque --> Actif : Déblocage /\nProblème résolu
+Bloque --> Inactif : Déblocage partiel
+Bloque --> Perdu : Déclaration de perte
+Bloque --> Vole : Déclaration de vol
+
+' Transitions depuis Perdu
+Perdu --> NonAttribue : Réutilisation\n[Badge retrouvé et nettoyé]
+note on link
+  Rare - Nécessite
+  vérification de sécurité
+end note
+
+' Transitions depuis Volé
+Vole --> NonAttribue : Réinitialisation complète\n[Après enquête]
+note on link
+  Après validation
+  par la sécurité
+end note
+
+' Transitions depuis Expiré
+Expire --> Actif : Prolongation de la visite
+Expire --> NonAttribue : Réattribution à nouveau visiteur
+
+' États finaux (optionnels)
+Perdu --> [*] : Destruction physique du badge
+Vole --> [*] : Badge définitivement annulé
+Expire --> [*] : Badge visiteur archivé
+
+' Notes explicatives
+note right of NonAttribue
+  État initial d'un badge
+  en stock, prêt à être
+  programmé et distribué
+end note
+
+note right of Actif
+  État nominal permettant
+  l'accès. Tous les passages
+  sont tracés dans l'historique.
+end note
+
+note bottom of Bloque
+  Raisons possibles de blocage:
+  - Comportement suspect
+  - Demande temporaire
+  - Mesure disciplinaire
+  - Investigation en cours
+end note
+
+note bottom of Perdu
+  Actions déclenchées:
+  1. Blocage immédiat
+  2. Notification admin
+  3. Création nouveau badge
+  4. Transfert des droits
+end note
+
+note bottom of Vole
+  Actions déclenchées:
+  1. Blocage immédiat
+  2. Alerte sécurité
+  3. Surveillance accès
+  4. Remplacement badge
+  5. Rapport incident
+end note
+
+note right of Expire
+  Concerne uniquement les
+  badges visiteurs avec une
+  date de fin de validité
+end note
+
+' Légende
+legend right
+  |= Couleur |= Signification |
+  | <back:lightgreen>Vert</back> | États opérationnels |
+  | <back:yellow>Jaune</back> | États transitoires |
+  | <back:pink>Rose</back> | États bloquants |
+  | <back:red>Rouge</back> | États terminaux |
+endlegend
+
+@enduml

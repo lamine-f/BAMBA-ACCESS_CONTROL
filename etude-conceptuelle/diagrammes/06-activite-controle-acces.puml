@@ -1,0 +1,139 @@
+@startuml Activite_Controle_Acces
+title Système de Contrôle d'Accès\nDiagramme d'Activité - Processus de Contrôle d'Accès
+
+|Étudiant/Visiteur|
+start
+:Présenter le badge au lecteur;
+
+|Système|
+:Lire le numéro de badge;
+
+:Rechercher le badge dans la BD;
+
+if (Badge trouvé ?) then (oui)
+  :Récupérer les informations du badge;
+
+  if (Type de badge ?) then (ETUDIANT)
+    :Récupérer les données de l'étudiant;
+
+    if (Statut étudiant = ACTIF ?) then (oui)
+      if (Statut badge = ACTIF ?) then (oui)
+        :Obtenir le trimestre en cours;
+
+        :Vérifier le statut de paiement\npour le trimestre;
+
+        if (Paiement effectué ?) then (oui)
+          #LightGreen:**AUTORISER L'ACCÈS**;
+          :Enregistrer passage\n(AUTORISE, date/heure);
+
+          |Système Physique|
+          :Ouvrir porte/barrière;
+          :Signal visuel/sonore POSITIF;
+          :Afficher message de bienvenue;
+          note right
+            Affichage:
+            - Nom de l'étudiant
+            - Classe
+            - Heure d'arrivée
+            - Photo (optionnel)
+          end note
+
+        else (non - IMPAYE ou PARTIEL)
+          #Pink:**REFUSER L'ACCÈS**;
+          :Enregistrer passage\n(REFUSE_PAIEMENT_MANQUANT);
+
+          |Système Physique|
+          :Signal visuel/sonore NEGATIF;
+          :Afficher message\n"Trimestre impayé";
+          note right
+            Affichage:
+            - Montant dû
+            - Contact administration
+          end note
+        endif
+
+      else (non - BLOQUE, INACTIF, PERDU, VOLE)
+        #Pink:**REFUSER L'ACCÈS**;
+        :Enregistrer passage\n(REFUSE_BADGE_BLOQUE);
+
+        |Système Physique|
+        :Signal NEGATIF;
+        :Afficher "Badge bloqué";
+      endif
+
+    else (non - INACTIF ou SUSPENDU)
+      #Pink:**REFUSER L'ACCÈS**;
+      :Enregistrer passage\n(REFUSE_ETUDIANT_INACTIF);
+
+      |Système Physique|
+      :Signal NEGATIF;
+      :Afficher "Compte inactif";
+    endif
+
+  else (VISITEUR)
+    :Récupérer les données du visiteur;
+
+    if (Statut badge = ACTIF ?) then (oui)
+      :Vérifier période de validité\n(dateDebut, dateFin);
+
+      if (Date actuelle dans période ?) then (oui)
+        #LightGreen:**AUTORISER L'ACCÈS**;
+        :Enregistrer passage visiteur\n(AUTORISE, date/heure);
+
+        |Système Physique|
+        :Ouvrir porte;
+        :Signal POSITIF;
+        :Afficher nom visiteur\n+ organisation;
+
+      else (non - badge expiré)
+        #Pink:**REFUSER L'ACCÈS**;
+        :Enregistrer passage\n(REFUSE_BADGE_EXPIRE);
+
+        |Système Physique|
+        :Signal NEGATIF;
+        :Afficher "Badge expiré";
+      endif
+
+    else (non)
+      #Pink:**REFUSER L'ACCÈS**;
+      :Enregistrer passage\n(REFUSE_BADGE_BLOQUE);
+
+      |Système Physique|
+      :Signal NEGATIF;
+      :Afficher "Badge désactivé";
+    endif
+  endif
+
+else (non)
+  #Red:**REFUSER L'ACCÈS - ALERTE**;
+  :Enregistrer tentative\n(REFUSE_BADGE_INVALIDE);
+
+  fork
+    |Système Physique|
+    :Signal NEGATIF renforcé;
+    :Afficher "Badge non reconnu";
+  fork again
+    |Système|
+    :Générer alerte sécurité;
+    note right
+      Tentative avec badge
+      inconnu peut indiquer:
+      - Badge contrefait
+      - Badge non enregistré
+      - Intrusion
+    end note
+  end fork
+endif
+
+|Système|
+:Calculer temps de réponse;
+
+if (Temps > 2 secondes ?) then (oui)
+  :Enregistrer alerte performance;
+else (non)
+  ' RAS
+endif
+
+stop
+
+@enduml
