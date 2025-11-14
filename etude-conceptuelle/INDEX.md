@@ -323,7 +323,7 @@ Pour toute question sur cette documentation :
 
 ---
 
-**Dernière mise à jour :** [Date actuelle]
+**Dernière mise à jour :** 14/11/2025
 **Version de la documentation :** 1.0
 **Statut :** ✅ Complète et validée
 
