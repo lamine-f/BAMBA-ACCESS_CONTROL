@@ -119,7 +119,9 @@ if (Données valides ?) then (oui)
       :Modifier statut = EN_COURS;
       :Désactiver tous les autres trimestres;
 
-      == Mise à jour massive des droits d'accès ==
+      note right
+        === Mise à jour massive des droits d'accès ===
+      end note
 
       :Récupérer tous les étudiants actifs;
 
@@ -203,7 +205,9 @@ if (Données valides ?) then (oui)
       end note
     endif
 
-    == Communication et diffusion ==
+    note right
+      === Communication et diffusion ===
+    end note
 
     |Administrateur|
     if (Publier annonce ?) then (oui)
@@ -228,7 +232,9 @@ if (Données valides ?) then (oui)
       end fork
     endif
 
-    == Préparation des outils ==
+    note right
+      === Préparation des outils ===
+    end note
 
     |Système|
     fork

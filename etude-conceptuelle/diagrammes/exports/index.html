@@ -1,0 +1,405 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Diagrammes UML - Système de Contrôle d'Accès</title>
+    <style type="text/css">
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #C0C0C0;
+            margin: 0;
+            padding: 0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+        }
+        .modal-content {
+            margin: 2% auto;
+            display: block;
+            max-width: 95%;
+            max-height: 95%;
+        }
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Conteneur principal -->
+<table width="95%" border="0" cellpadding="20" cellspacing="0" align="center" bgcolor="#FFFFFF">
+<tr>
+    <td>
+
+        <!-- En-tête -->
+        <table width="100%" border="0" cellpadding="10" cellspacing="0">
+        <tr>
+            <td align="center" bgcolor="#000080">
+                <font face="Arial" size="6" color="#FFFFFF"><b>📐 Diagrammes UML</b></font><br>
+                <font face="Arial" size="4" color="#FFFF00">Système de Contrôle d'Accès pour Étudiants</font>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Boîte d'information -->
+        <table width="100%" border="2" cellpadding="10" cellspacing="0" bordercolor="#000080">
+        <tr>
+            <td bgcolor="#E0E0FF">
+                <font face="Arial" size="3">
+                <b>ℹ️ Information :</b> Cliquez sur un diagramme pour l'agrandir. Tous les diagrammes sont au format PNG haute qualité.
+                </font>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Statistiques -->
+        <table width="100%" border="0" cellpadding="0" cellspacing="10">
+        <tr>
+            <td width="33%" valign="top">
+                <table width="100%" border="2" cellpadding="10" cellspacing="0" bordercolor="#000080" bgcolor="#6666CC">
+                <tr>
+                    <td align="center">
+                        <font face="Arial" size="7" color="#FFFFFF"><b>11</b></font><br>
+                        <font face="Arial" size="2" color="#FFFF99">Diagrammes UML</font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+            <td width="33%" valign="top">
+                <table width="100%" border="2" cellpadding="10" cellspacing="0" bordercolor="#000080" bgcolor="#6666CC">
+                <tr>
+                    <td align="center">
+                        <font face="Arial" size="7" color="#FFFFFF"><b>PNG</b></font><br>
+                        <font face="Arial" size="2" color="#FFFF99">Format</font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+            <td width="33%" valign="top">
+                <table width="100%" border="2" cellpadding="10" cellspacing="0" bordercolor="#000080" bgcolor="#6666CC">
+                <tr>
+                    <td align="center">
+                        <font face="Arial" size="7" color="#FFFFFF"><b>2.3 MB</b></font><br>
+                        <font face="Arial" size="2" color="#FFFF99">Taille totale</font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br><br>
+
+        <!-- Diagramme 1 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>1. Diagramme de Cas d'Utilisation</b></font>
+                <hr size="2" color="#000080">
+                <img src="Diagramme_Cas_Utilisation.png" alt="Cas d'utilisation" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Présente tous les cas d'utilisation du système (29 au total) organisés en 6 packages.<br>
+                        <b>Acteurs :</b> Étudiant, Visiteur, Administrateur, Système de Badge, Base de Données
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 2 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>2. Diagramme de Classes</b></font>
+                <hr size="2" color="#000080">
+                <img src="Diagramme_Classes.png" alt="Classes" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Architecture complète avec 9 entités principales, 4 services et 8 énumérations.<br>
+                        <b>Poids :</b> 403 KB - Le plus détaillé
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 3 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>3. Séquence - Contrôle d'Accès</b></font>
+                <hr size="2" color="#000080">
+                <img src="Sequence_Controle_Acces.png" alt="Séquence contrôle accès" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Processus complet de vérification lors de la présentation d'un badge.<br>
+                        <b>Scénarios :</b> Accès autorisé, Paiement manquant, Badge inconnu, Badge visiteur
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 4 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>4. Séquence - Enregistrement Paiement</b></font>
+                <hr size="2" color="#000080">
+                <img src="Sequence_Enregistrement_Paiement.png" alt="Séquence paiement" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Workflow complet d'enregistrement d'un paiement trimestriel.<br>
+                        <b>Étapes :</b> Sélection, Vérification, Saisie, Enregistrement, Activation badge, Génération reçu
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 5 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>5. Séquence - Génération Rapport</b></font>
+                <hr size="2" color="#000080">
+                <img src="Sequence_Generation_Rapport.png" alt="Séquence rapport" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Processus de génération de rapports de présence avec filtres et exports multi-formats.<br>
+                        <b>Formats :</b> PDF, Excel, CSV
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 6 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>6. Activité - Contrôle d'Accès</b></font>
+                <hr size="2" color="#000080">
+                <img src="Activite_Controle_Acces.png" alt="Activité contrôle accès" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Flux détaillé du processus de contrôle d'accès avec toutes les vérifications et décisions.<br>
+                        <b>Poids :</b> 201 KB - Très détaillé
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 7 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>7. Activité - Inscription Étudiant</b></font>
+                <hr size="2" color="#000080">
+                <img src="Activite_Inscription_Etudiant.png" alt="Activité inscription" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Processus complet d'inscription d'un nouvel étudiant.<br>
+                        <b>Durée cible :</b> 10 minutes
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 8 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>8. Activité - Début de Trimestre</b></font>
+                <hr size="2" color="#000080">
+                <img src="Activite_Debut_Trimestre.png" alt="Activité trimestre" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Gestion complète du changement de trimestre avec mise à jour massive des badges.<br>
+                        <b>Poids :</b> 304 KB - Très détaillé avec 3 sections majeures
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 9 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>9. États - Badge</b></font>
+                <hr size="2" color="#000080">
+                <img src="Etats_Badge.png" alt="États badge" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Cycle de vie complet d'un badge avec tous les états possibles.<br>
+                        <b>États :</b> Non Attribué, Inactif, Actif, Bloqué, Perdu, Volé, Expiré
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 10 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>10. États - Paiement</b></font>
+                <hr size="2" color="#000080">
+                <img src="Etats_Paiement.png" alt="États paiement" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Diagramme d'états du statut de paiement trimestriel.<br>
+                        <b>États :</b> Impayé, Partiel, Payé, En Attente, Remboursé
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br>
+
+        <!-- Diagramme 11 -->
+        <table width="100%" border="3" cellpadding="15" cellspacing="0" bordercolor="#666666" bgcolor="#F0F0F0">
+        <tr>
+            <td>
+                <font face="Arial" size="5" color="#000080"><b>11. États - Étudiant</b></font>
+                <hr size="2" color="#000080">
+                <img src="Etats_Etudiant.png" alt="États étudiant" width="100%" border="1" style="cursor: pointer;" onclick="openModal(this.src)">
+                <table width="100%" border="1" cellpadding="8" cellspacing="0" bordercolor="#999999" bgcolor="#FFFFFF">
+                <tr>
+                    <td>
+                        <font face="Arial" size="2">
+                        <b>Description :</b> Cycle de vie d'un étudiant dans le système.<br>
+                        <b>États :</b> Inscrit, Actif, Suspendu, En Congé, Inactif, Radié
+                        </font>
+                    </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+
+        <br><br>
+
+        <!-- Pied de page -->
+        <table width="100%" border="0" cellpadding="10" cellspacing="0">
+        <tr>
+            <td align="center" bgcolor="#CCCCCC">
+                <hr size="2" color="#666666">
+                <font face="Times New Roman" size="4" color="#000000"><b>Système de Contrôle d'Accès pour Étudiants</b></font><br>
+                <font face="Arial" size="2" color="#333333">Étude conceptuelle complète - Version 1.0</font><br>
+                <font face="Arial" size="2" color="#333333">Généré le : 14/11/2025</font><br><br>
+                <font face="Arial" size="2" color="#666666">📁 Emplacement : etude-conceptuelle/diagrammes/exports/</font>
+            </td>
+        </tr>
+        </table>
+
+    </td>
+</tr>
+</table>
+
+<!-- Modal pour agrandir les images -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <img class="modal-content" id="modalImg">
+</div>
+
+<script type="text/javascript">
+    function openModal(src) {
+        document.getElementById('imageModal').style.display = 'block';
+        document.getElementById('modalImg').src = src;
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    document.onkeydown = function(event) {
+        event = event || window.event;
+        if (event.keyCode == 27) {
+            closeModal();
+        }
+    };
+</script>
+
+</body>
+</html>
