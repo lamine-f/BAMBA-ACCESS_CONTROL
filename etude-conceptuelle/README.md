@@ -374,8 +374,8 @@ Cette étude conceptuelle est fournie pour le projet de système de contrôle d'
 ---
 
 **Version :** 1.0
-**Date de création :** [Date actuelle]
-**Dernière mise à jour :** [Date actuelle]
+**Date de création :** 14/11/2025
+**Dernière mise à jour :** 14/11/2025
 **Statut :** ✅ Validé pour développement
 
 ---
